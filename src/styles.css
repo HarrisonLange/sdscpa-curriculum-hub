@@ -352,6 +352,19 @@ a {
   font-size: 11px;
 }
 
+.grade-groups {
+  display: grid;
+  gap: 34px;
+}
+
+.grade-heading {
+  margin-bottom: 12px;
+  color: #c9cbd1;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: 0.5px;
+}
+
 .course-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

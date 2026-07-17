@@ -29,10 +29,10 @@ const DOCUMENT_COLUMNS: ReadonlyArray<{
   kind: DocumentKind;
   defaultCategory: string;
 }> = [
-  { column: "B", kind: "yearAtAGlance", defaultCategory: "Year at a Glance" },
-  { column: "C", kind: "syllabus", defaultCategory: "Syllabus" },
-  { column: "D", kind: "powerPoint", defaultCategory: "PowerPoint" },
-  { column: "E", kind: "canvasShell", defaultCategory: "Canvas Shell Template" },
+  { column: "C", kind: "yearAtAGlance", defaultCategory: "Year at a Glance" },
+  { column: "D", kind: "syllabus", defaultCategory: "Syllabus" },
+  { column: "E", kind: "powerPoint", defaultCategory: "PowerPoint" },
+  { column: "F", kind: "canvasShell", defaultCategory: "Canvas Shell Template" },
 ];
 
 export class WorkbookArchiveError extends Error {
@@ -148,6 +148,14 @@ const readWorkbookGrid = (
 
 const cleanPreparedBy = (value: string): string => value.replace(/^Prepared by:\s*/i, "").trim();
 
+const normalizeGrade = (value: string): string => {
+  const normalized: string = value.trim();
+  const numericGrade: number = Number(normalized);
+  return normalized !== "" && Number.isFinite(numericGrade)
+    ? String(numericGrade)
+    : normalized;
+};
+
 const normalizeCategory = (value: string, fallback: string): string => {
   const normalized: string = value.trim().toLowerCase();
   if (normalized === "sylibus" || normalized === "syllabus") {
@@ -187,7 +195,7 @@ const createFoundationResources = (grid: WorkbookGrid): ReadonlyArray<Foundation
     const name: string = grid.values.get(`A${row}`) ?? "";
     const documentLink: DocumentLink | null = createDocumentLink(
       grid,
-      `B${row}`,
+      `C${row}`,
       "yearAtAGlance",
       "Program Resource",
     );
@@ -213,6 +221,7 @@ const createCourses = (grid: WorkbookGrid): ReadonlyArray<Course> => {
 
   return rowNumbers.flatMap((row: number, courseIndex: number) => {
     const name: string = grid.values.get(`A${row}`) ?? "";
+    const grade: string = normalizeGrade(grid.values.get(`B${row}`) ?? "");
     if (name === "") {
       return [];
     }
@@ -230,7 +239,7 @@ const createCourses = (grid: WorkbookGrid): ReadonlyArray<Course> => {
       },
     );
 
-    return [{ name, documents, accent: getAccent(courseIndex) }];
+    return [{ name, grade, documents, accent: getAccent(courseIndex) }];
   });
 };
 

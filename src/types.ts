@@ -18,6 +18,7 @@ export type DocumentLink = {
 
 export type Course = {
   name: string;
+  grade: string;
   documents: ReadonlyArray<DocumentLink>;
   accent: Accent;
 };

@@ -164,6 +164,7 @@ const createCourseCard = (course: Course): HTMLElement => {
 const matchesQuery = (course: Course, query: string): boolean => {
   const searchableText: string = [
     course.name,
+    course.grade,
     ...course.documents.flatMap((documentLink: DocumentLink) => [
       documentLink.category,
       documentLink.title,
@@ -172,6 +173,55 @@ const matchesQuery = (course: Course, query: string): boolean => {
     .join(" ")
     .toLowerCase();
   return searchableText.includes(query.trim().toLowerCase());
+};
+
+type CourseGroup = {
+  grade: string;
+  courses: ReadonlyArray<Course>;
+};
+
+const compareGrades = (leftGrade: string, rightGrade: string): number => {
+  if (leftGrade === "") {
+    return 1;
+  }
+  if (rightGrade === "") {
+    return -1;
+  }
+
+  const leftNumber: number = Number(leftGrade);
+  const rightNumber: number = Number(rightGrade);
+  if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
+    return leftNumber - rightNumber;
+  }
+  return leftGrade.localeCompare(rightGrade, undefined, { numeric: true });
+};
+
+const groupCoursesByGrade = (courses: ReadonlyArray<Course>): ReadonlyArray<CourseGroup> =>
+  Array.from(new Set<string>(courses.map((course: Course) => course.grade.trim())))
+    .sort(compareGrades)
+    .map((grade: string) => ({
+      grade,
+      courses: courses.filter((course: Course) => course.grade.trim() === grade),
+    }));
+
+const formatGradeHeading = (grade: string): string => {
+  if (grade === "") {
+    return "Grade not listed";
+  }
+  return grade.toLowerCase() === "any" ? "Any grade" : `Grade ${grade}`;
+};
+
+const createGradeGroup = (group: CourseGroup): HTMLElement => {
+  const section: HTMLElement = createElement("section", "grade-group", "");
+  const heading: HTMLHeadingElement = createElement(
+    "h3",
+    "grade-heading",
+    formatGradeHeading(group.grade),
+  );
+  const grid: HTMLDivElement = createElement("div", "course-grid", "");
+  group.courses.forEach((course: Course) => grid.append(createCourseCard(course)));
+  section.append(heading, grid);
+  return section;
 };
 
 const createCourseGrid = (
@@ -202,9 +252,11 @@ const createCourseGrid = (
     return wrapper;
   }
 
-  const grid: HTMLDivElement = createElement("div", "course-grid", "");
-  matchingCourses.forEach((course: Course) => grid.append(createCourseCard(course)));
-  wrapper.append(grid);
+  const groups: HTMLDivElement = createElement("div", "grade-groups", "");
+  groupCoursesByGrade(matchingCourses).forEach((group: CourseGroup) =>
+    groups.append(createGradeGroup(group)),
+  );
+  wrapper.append(groups);
   return wrapper;
 };
 
