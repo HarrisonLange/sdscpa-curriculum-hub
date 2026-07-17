@@ -7,11 +7,14 @@ import type {
   DocumentKind,
   DocumentLink,
   FoundationResource,
+  OtherLink,
 } from "./types";
 
 const SHARED_STRINGS_PATH = "xl/sharedStrings.xml";
-const WORKSHEET_PATH = "xl/worksheets/sheet1.xml";
-const RELATIONSHIPS_PATH = "xl/worksheets/_rels/sheet1.xml.rels";
+const CURRICULUM_WORKSHEET_PATH = "xl/worksheets/sheet1.xml";
+const CURRICULUM_RELATIONSHIPS_PATH = "xl/worksheets/_rels/sheet1.xml.rels";
+const OTHER_LINKS_WORKSHEET_PATH = "xl/worksheets/sheet2.xml";
+const OTHER_LINKS_RELATIONSHIPS_PATH = "xl/worksheets/_rels/sheet2.xml.rels";
 const RELATIONSHIP_ID_ATTRIBUTE = "r:id";
 
 const COURSE_ACCENTS: ReadonlyArray<Accent> = [
@@ -206,6 +209,22 @@ const createFoundationResources = (grid: WorkbookGrid): ReadonlyArray<Foundation
     return [{ name, document: documentLink, accent: getAccent(index) }];
   });
 
+const createOtherLinks = (grid: WorkbookGrid): ReadonlyArray<OtherLink> => {
+  const rowNumbers: ReadonlyArray<number> = Array.from(
+    { length: grid.maximumRow },
+    (_value: unknown, index: number) => index + 1,
+  );
+
+  return rowNumbers.flatMap((row: number) => {
+    const name: string = grid.values.get(`A${row}`) ?? "";
+    const label: string = grid.values.get(`B${row}`) ?? "";
+    const url: string | undefined = grid.links.get(`B${row}`);
+    return name === "" || label === "" || url === undefined
+      ? []
+      : [{ name, label, url }];
+  });
+};
+
 const createCourses = (grid: WorkbookGrid): ReadonlyArray<Course> => {
   const categories: ReadonlyMap<string, string> = new Map<string, string>(
     DOCUMENT_COLUMNS.map(({ column, defaultCategory }) => [
@@ -248,21 +267,42 @@ export const parseCurriculumWorkbook = (workbookBytes: Uint8Array): CurriculumCa
   const sharedStrings: ReadonlyArray<string> = readSharedStrings(
     parseXml(getRequiredArchiveText(archive, SHARED_STRINGS_PATH), SHARED_STRINGS_PATH),
   );
-  const relationshipTargets: ReadonlyMap<string, string> = readRelationshipTargets(
-    parseXml(getRequiredArchiveText(archive, RELATIONSHIPS_PATH), RELATIONSHIPS_PATH),
+  const curriculumRelationshipTargets: ReadonlyMap<string, string> = readRelationshipTargets(
+    parseXml(
+      getRequiredArchiveText(archive, CURRICULUM_RELATIONSHIPS_PATH),
+      CURRICULUM_RELATIONSHIPS_PATH,
+    ),
   );
-  const grid: WorkbookGrid = readWorkbookGrid(
-    parseXml(getRequiredArchiveText(archive, WORKSHEET_PATH), WORKSHEET_PATH),
+  const curriculumGrid: WorkbookGrid = readWorkbookGrid(
+    parseXml(
+      getRequiredArchiveText(archive, CURRICULUM_WORKSHEET_PATH),
+      CURRICULUM_WORKSHEET_PATH,
+    ),
     sharedStrings,
-    relationshipTargets,
+    curriculumRelationshipTargets,
+  );
+  const otherLinksRelationshipTargets: ReadonlyMap<string, string> = readRelationshipTargets(
+    parseXml(
+      getRequiredArchiveText(archive, OTHER_LINKS_RELATIONSHIPS_PATH),
+      OTHER_LINKS_RELATIONSHIPS_PATH,
+    ),
+  );
+  const otherLinksGrid: WorkbookGrid = readWorkbookGrid(
+    parseXml(
+      getRequiredArchiveText(archive, OTHER_LINKS_WORKSHEET_PATH),
+      OTHER_LINKS_WORKSHEET_PATH,
+    ),
+    sharedStrings,
+    otherLinksRelationshipTargets,
   );
 
   return {
-    title: grid.values.get("A1") ?? "Design and Production Curriculum Hub",
-    program: grid.values.get("A2") ?? "SDSCPA",
-    preparedBy: cleanPreparedBy(grid.values.get("A3") ?? ""),
-    foundationResources: createFoundationResources(grid),
-    courses: createCourses(grid),
+    title: curriculumGrid.values.get("A1") ?? "Design and Production Curriculum Hub",
+    program: curriculumGrid.values.get("A2") ?? "SDSCPA",
+    preparedBy: cleanPreparedBy(curriculumGrid.values.get("A3") ?? ""),
+    otherLinks: createOtherLinks(otherLinksGrid),
+    foundationResources: createFoundationResources(curriculumGrid),
+    courses: createCourses(curriculumGrid),
     loadedAt: new Date(),
   };
 };

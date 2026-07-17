@@ -4,6 +4,7 @@ import type {
   CurriculumCatalog,
   DocumentLink,
   FoundationResource,
+  OtherLink,
 } from "./types";
 
 const createElement = <K extends keyof HTMLElementTagNameMap>(
@@ -109,6 +110,41 @@ const createFoundationCard = (resource: FoundationResource): HTMLElement => {
     createExternalLink(resource.document, "resource-link"),
   );
   return card;
+};
+
+const createOtherLinkCard = (otherLink: OtherLink): HTMLAnchorElement => {
+  const link: HTMLAnchorElement = createElement("a", "other-link-card panel", "");
+  link.href = otherLink.url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.setAttribute(
+    "aria-label",
+    `${otherLink.name}: ${otherLink.label} (opens in a new tab)`,
+  );
+
+  const copy: HTMLSpanElement = createElement("span", "other-link-copy", "");
+  copy.append(
+    createElement("span", "other-link-name", otherLink.name),
+    createElement("span", "other-link-destination", otherLink.label),
+  );
+  link.append(copy, createElement("span", "external-arrow", "↗"));
+  return link;
+};
+
+const createOtherLinksSection = (otherLinks: ReadonlyArray<OtherLink>): HTMLElement => {
+  const section: HTMLElement = createElement("section", "section-block other-links-section", "");
+  section.setAttribute("aria-labelledby", "other-links-heading");
+  const heading: HTMLHeadingElement = createElement("h2", "section-heading", "Other links");
+  heading.id = "other-links-heading";
+  const intro: HTMLParagraphElement = createElement(
+    "p",
+    "section-intro",
+    "Frequently used SDSCPA production systems and tools.",
+  );
+  const grid: HTMLDivElement = createElement("div", "other-links-grid", "");
+  otherLinks.forEach((otherLink: OtherLink) => grid.append(createOtherLinkCard(otherLink)));
+  section.append(heading, intro, grid);
+  return section;
 };
 
 const createFoundationSection = (
@@ -322,10 +358,12 @@ export const createApplication = (catalog: CurriculumCatalog): HTMLDivElement =>
   const application: HTMLDivElement = createElement("div", "application", "");
   const main: HTMLElement = createElement("main", "main-content", "");
   main.id = "main-content";
-  main.append(
+  const sections: ReadonlyArray<HTMLElement> = [
+    ...(catalog.otherLinks.length === 0 ? [] : [createOtherLinksSection(catalog.otherLinks)]),
     createFoundationSection(catalog.foundationResources),
     createCoursesSection(catalog.courses),
-  );
+  ];
+  main.append(...sections);
   application.append(createHeader(catalog), main, createFooter(catalog));
   return application;
 };
