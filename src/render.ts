@@ -85,41 +85,6 @@ const createHeader = (catalog: CurriculumCatalog): HTMLElement => {
   return header;
 };
 
-const createMetric = (value: string, label: string): HTMLDivElement => {
-  const metric: HTMLDivElement = createElement("div", "metric", "");
-  metric.append(
-    createElement("strong", "metric-value", value),
-    createElement("span", "metric-label", label),
-  );
-  return metric;
-};
-
-const countDocuments = (catalog: CurriculumCatalog): number =>
-  catalog.foundationResources.length +
-  catalog.courses.reduce(
-    (total: number, course: Course) => total + course.documents.length,
-    0,
-  );
-
-const createOverview = (catalog: CurriculumCatalog): HTMLElement => {
-  const section: HTMLElement = createElement("section", "overview panel", "");
-  section.setAttribute("aria-label", "Catalog overview");
-  const intro: HTMLDivElement = createElement("div", "overview-copy", "");
-  intro.append(
-    createElement("p", "eyebrow", "Live curriculum index"),
-    createElement("h2", "overview-title", "Everything your production team needs to teach the sequence."),
-  );
-
-  const metrics: HTMLDivElement = createElement("div", "metrics", "");
-  metrics.append(
-    createMetric(String(catalog.courses.length), "Courses"),
-    createMetric(String(countDocuments(catalog)), "Linked files"),
-    createMetric(String(catalog.foundationResources.length), "Core resources"),
-  );
-  section.append(intro, metrics);
-  return section;
-};
-
 const createExternalLink = (documentLink: DocumentLink, className: string): HTMLAnchorElement => {
   const link: HTMLAnchorElement = createElement("a", className, "");
   link.href = documentLink.url;
@@ -306,7 +271,6 @@ export const createApplication = (catalog: CurriculumCatalog): HTMLDivElement =>
   const main: HTMLElement = createElement("main", "main-content", "");
   main.id = "main-content";
   main.append(
-    createOverview(catalog),
     createFoundationSection(catalog.foundationResources),
     createCoursesSection(catalog.courses),
   );

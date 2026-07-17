@@ -177,57 +177,12 @@ a {
   padding: 20px 22px;
 }
 
-.overview {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 28px;
-  padding: 24px 26px;
-}
-
-.overview-title {
-  max-width: 560px;
-  margin-top: 8px;
-  font-size: clamp(19px, 3vw, 27px);
-  line-height: 1.25;
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(76px, 1fr));
-  gap: 8px;
-}
-
-.metric {
-  min-width: 86px;
-  padding: 11px 12px;
-  text-align: center;
-  background: #101014;
-  border: 1px solid var(--ui-dark3);
-  border-radius: 10px;
-}
-
-.metric-value,
-.metric-label {
-  display: block;
-}
-
-.metric-value {
-  font-size: 22px;
-  font-weight: 800;
-}
-
-.metric-label {
-  margin-top: 2px;
-  color: var(--text-dim);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.7px;
-  text-transform: uppercase;
-}
-
 .section-block {
   margin-top: 48px;
+}
+
+.main-content > .section-block:first-child {
+  margin-top: 0;
 }
 
 .section-heading {
@@ -527,14 +482,6 @@ a {
 }
 
 @media (max-width: 760px) {
-  .overview {
-    grid-template-columns: 1fr;
-  }
-
-  .metrics {
-    width: 100%;
-  }
-
   .section-heading-row {
     align-items: stretch;
     flex-direction: column;
@@ -571,19 +518,6 @@ a {
 
   .panel {
     padding: 18px;
-  }
-
-  .overview {
-    padding: 20px;
-  }
-
-  .metrics {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .metric {
-    min-width: 0;
-    padding-inline: 6px;
   }
 
   .foundation-grid,
