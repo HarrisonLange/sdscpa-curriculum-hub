@@ -1,3 +1,4 @@
+import { BRAND_ACCENTS, getAccent } from "./accents";
 import type {
   Accent,
   Course,
@@ -18,7 +19,7 @@ const createElement = <K extends keyof HTMLElementTagNameMap>(
   return element;
 };
 
-const applyAccent = (element: HTMLElement, accent: Accent): HTMLElement => {
+const applyAccent = <T extends HTMLElement>(element: T, accent: Accent): T => {
   element.style.setProperty("--section-accent", accent.color);
   element.style.setProperty("--section-tint", accent.tint);
   return element;
@@ -40,15 +41,7 @@ const createWordmark = (): SVGSVGElement => {
   gradient.id = "wordmark-gradient";
   gradient.setAttribute("x1", "0");
   gradient.setAttribute("x2", "1");
-  const colors: ReadonlyArray<string> = [
-    "#7AC143",
-    "#F7941E",
-    "#ED1C45",
-    "#EC008C",
-    "#92278F",
-    "#2E3192",
-    "#00AEEF",
-  ];
+  const colors: ReadonlyArray<string> = BRAND_ACCENTS.map((accent: Accent) => accent.color);
   colors.forEach((color: string, index: number) => {
     const stop: SVGStopElement = document.createElementNS(namespace, "stop") as SVGStopElement;
     stop.setAttribute("offset", `${(index / (colors.length - 1)) * 100}%`);
@@ -102,8 +95,14 @@ const createExternalLink = (documentLink: DocumentLink, className: string): HTML
   return link;
 };
 
-const createFoundationCard = (resource: FoundationResource): HTMLElement => {
-  const card: HTMLElement = applyAccent(createElement("article", "foundation-card panel", ""), resource.accent);
+const createFoundationCard = (
+  resource: FoundationResource,
+  accentIndex: number,
+): HTMLElement => {
+  const card: HTMLElement = applyAccent(
+    createElement("article", "foundation-card panel", ""),
+    getAccent(accentIndex),
+  );
   card.append(
     createElement("p", "eyebrow", "Program foundation"),
     createElement("h3", "foundation-name", resource.name),
@@ -112,8 +111,14 @@ const createFoundationCard = (resource: FoundationResource): HTMLElement => {
   return card;
 };
 
-const createOtherLinkCard = (otherLink: OtherLink): HTMLAnchorElement => {
-  const link: HTMLAnchorElement = createElement("a", "other-link-card panel", "");
+const createOtherLinkCard = (
+  otherLink: OtherLink,
+  accentIndex: number,
+): HTMLAnchorElement => {
+  const link: HTMLAnchorElement = applyAccent(
+    createElement("a", "other-link-card panel", ""),
+    getAccent(accentIndex),
+  );
   link.href = otherLink.url;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
@@ -142,7 +147,9 @@ const createOtherLinksSection = (otherLinks: ReadonlyArray<OtherLink>): HTMLElem
     "Frequently used SDSCPA production systems and tools.",
   );
   const grid: HTMLDivElement = createElement("div", "other-links-grid", "");
-  otherLinks.forEach((otherLink: OtherLink) => grid.append(createOtherLinkCard(otherLink)));
+  otherLinks.forEach((otherLink: OtherLink, index: number) =>
+    grid.append(createOtherLinkCard(otherLink, index)),
+  );
   section.append(heading, intro, grid);
   return section;
 };
@@ -164,13 +171,18 @@ const createFoundationSection = (
     "Shared standards and skill progressions for the full Design & Production pathway.",
   );
   const grid: HTMLDivElement = createElement("div", "foundation-grid", "");
-  resources.forEach((resource: FoundationResource) => grid.append(createFoundationCard(resource)));
+  resources.forEach((resource: FoundationResource, index: number) =>
+    grid.append(createFoundationCard(resource, index)),
+  );
   section.append(heading, intro, grid);
   return section;
 };
 
-const createCourseCard = (course: Course): HTMLElement => {
-  const card: HTMLElement = applyAccent(createElement("article", "course-card panel", ""), course.accent);
+const createCourseCard = (course: Course, accentIndex: number): HTMLElement => {
+  const card: HTMLElement = applyAccent(
+    createElement("article", "course-card panel", ""),
+    getAccent(accentIndex),
+  );
   const header: HTMLDivElement = createElement("div", "course-header", "");
   header.append(
     createElement("p", "eyebrow", "Course documentation"),
@@ -247,7 +259,7 @@ const formatGradeHeading = (grade: string): string => {
   return grade.toLowerCase() === "any" ? "Any grade" : `Grade ${grade}`;
 };
 
-const createGradeGroup = (group: CourseGroup): HTMLElement => {
+const createGradeGroup = (group: CourseGroup, startingAccentIndex: number): HTMLElement => {
   const section: HTMLElement = createElement("section", "grade-group", "");
   const heading: HTMLHeadingElement = createElement(
     "h3",
@@ -255,7 +267,9 @@ const createGradeGroup = (group: CourseGroup): HTMLElement => {
     formatGradeHeading(group.grade),
   );
   const grid: HTMLDivElement = createElement("div", "course-grid", "");
-  group.courses.forEach((course: Course) => grid.append(createCourseCard(course)));
+  group.courses.forEach((course: Course, index: number) =>
+    grid.append(createCourseCard(course, startingAccentIndex + index)),
+  );
   section.append(heading, grid);
   return section;
 };
@@ -289,9 +303,16 @@ const createCourseGrid = (
   }
 
   const groups: HTMLDivElement = createElement("div", "grade-groups", "");
-  groupCoursesByGrade(matchingCourses).forEach((group: CourseGroup) =>
-    groups.append(createGradeGroup(group)),
+  const courseGroups: ReadonlyArray<CourseGroup> = groupCoursesByGrade(matchingCourses);
+  const gradeSections: ReadonlyArray<HTMLElement> = courseGroups.map(
+    (group: CourseGroup, index: number) => {
+      const startingAccentIndex: number = courseGroups
+        .slice(0, index)
+        .reduce((total: number, priorGroup: CourseGroup) => total + priorGroup.courses.length, 0);
+      return createGradeGroup(group, startingAccentIndex);
+    },
   );
+  groups.append(...gradeSections);
   wrapper.append(groups);
   return wrapper;
 };

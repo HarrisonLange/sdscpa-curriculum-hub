@@ -1,7 +1,6 @@
 import { strFromU8, unzipSync } from "fflate";
 
 import type {
-  Accent,
   Course,
   CurriculumCatalog,
   DocumentKind,
@@ -16,16 +15,6 @@ const CURRICULUM_RELATIONSHIPS_PATH = "xl/worksheets/_rels/sheet1.xml.rels";
 const OTHER_LINKS_WORKSHEET_PATH = "xl/worksheets/sheet2.xml";
 const OTHER_LINKS_RELATIONSHIPS_PATH = "xl/worksheets/_rels/sheet2.xml.rels";
 const RELATIONSHIP_ID_ATTRIBUTE = "r:id";
-
-const COURSE_ACCENTS: ReadonlyArray<Accent> = [
-  { color: "#7AC143", tint: "rgba(122, 193, 67, .16)" },
-  { color: "#F7941E", tint: "rgba(247, 148, 30, .16)" },
-  { color: "#ED1C45", tint: "rgba(237, 28, 69, .16)" },
-  { color: "#EC008C", tint: "rgba(236, 0, 140, .16)" },
-  { color: "#92278F", tint: "rgba(146, 39, 143, .16)" },
-  { color: "#2E3192", tint: "rgba(46, 49, 146, .22)" },
-  { color: "#00AEEF", tint: "rgba(0, 174, 239, .16)" },
-];
 
 const DOCUMENT_COLUMNS: ReadonlyArray<{
   column: string;
@@ -170,14 +159,6 @@ const normalizeCategory = (value: string, fallback: string): string => {
   return value.trim() === "" ? fallback : value.trim();
 };
 
-const getAccent = (index: number): Accent => {
-  const accent: Accent | undefined = COURSE_ACCENTS[index % COURSE_ACCENTS.length];
-  if (accent === undefined) {
-    throw new WorkbookArchiveError("The curriculum accent palette is empty.");
-  }
-  return accent;
-};
-
 const createDocumentLink = (
   grid: WorkbookGrid,
   reference: string,
@@ -194,7 +175,7 @@ const createDocumentLink = (
 };
 
 const createFoundationResources = (grid: WorkbookGrid): ReadonlyArray<FoundationResource> =>
-  [4, 5].flatMap((row: number, index: number) => {
+  [4, 5].flatMap((row: number) => {
     const name: string = grid.values.get(`A${row}`) ?? "";
     const documentLink: DocumentLink | null = createDocumentLink(
       grid,
@@ -206,7 +187,7 @@ const createFoundationResources = (grid: WorkbookGrid): ReadonlyArray<Foundation
       return [];
     }
 
-    return [{ name, document: documentLink, accent: getAccent(index) }];
+    return [{ name, document: documentLink }];
   });
 
 const createOtherLinks = (grid: WorkbookGrid): ReadonlyArray<OtherLink> => {
@@ -238,7 +219,7 @@ const createCourses = (grid: WorkbookGrid): ReadonlyArray<Course> => {
     (_value: unknown, index: number) => index + 7,
   );
 
-  return rowNumbers.flatMap((row: number, courseIndex: number) => {
+  return rowNumbers.flatMap((row: number) => {
     const name: string = grid.values.get(`A${row}`) ?? "";
     const grade: string = normalizeGrade(grid.values.get(`B${row}`) ?? "");
     if (name === "") {
@@ -258,7 +239,7 @@ const createCourses = (grid: WorkbookGrid): ReadonlyArray<Course> => {
       },
     );
 
-    return [{ name, grade, documents, accent: getAccent(courseIndex) }];
+    return [{ name, grade, documents }];
   });
 };
 

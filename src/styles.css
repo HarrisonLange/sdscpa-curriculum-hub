@@ -212,6 +212,7 @@ a {
   gap: 16px;
   color: var(--text-light);
   text-decoration: none;
+  border-left: 4px solid var(--section-accent);
   transition:
     border-color 160ms ease,
     transform 160ms ease,
@@ -219,7 +220,7 @@ a {
 }
 
 .other-link-card:hover {
-  border-color: var(--accent);
+  border-color: var(--section-accent);
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
 }

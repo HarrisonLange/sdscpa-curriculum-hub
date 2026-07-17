@@ -20,7 +20,6 @@ export type Course = {
   name: string;
   grade: string;
   documents: ReadonlyArray<DocumentLink>;
-  accent: Accent;
 };
 
 export type OtherLink = {
@@ -32,7 +31,6 @@ export type OtherLink = {
 export type FoundationResource = {
   name: string;
   document: DocumentLink;
-  accent: Accent;
 };
 
 export type CurriculumCatalog = {
